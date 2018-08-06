@@ -89,15 +89,16 @@ var app = http.createServer(function(request,response){
           });
       });
     } else if(pathname === '/update'){
-      fs.readdir('./data', function(error, filelist){
-        var filteredId = path.parse(queryData.id).base;
-        fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
-          var title = queryData.id;
-          var list = template.list(filelist);
+      db.query("select * from topic",function(error, results){
+        db.query("select * from topic where id = ?", [queryData.id],function(error2, topic){
+          var id = queryData.id;
+          var title = topic[0].title;
+          var description = topic[0].description;
+          var list = template.list(results);
           var html = template.HTML(title, list,
             `
             <form action="/update_process" method="post">
-              <input type="hidden" name="id" value="${title}">
+              <input type="hidden" name="id" value="${id}">
               <p><input type="text" name="title" placeholder="title" value="${title}"></p>
               <p>
                 <textarea name="description" placeholder="description">${description}</textarea>
@@ -123,11 +124,11 @@ var app = http.createServer(function(request,response){
           var id = post.id;
           var title = post.title;
           var description = post.description;
-          fs.rename(`data/${id}`, `data/${title}`, function(error){
-            fs.writeFile(`data/${title}`, description, 'utf8', function(err){
-              response.writeHead(302, {Location: `/?id=${title}`});
+          db.query("UPDATE topic \
+          SET title=?, description=? WHERE id=?",[title,description,id],function(error, result){
+              if (error) throw error;
+              response.writeHead(302, {Location: `/?id=${id}`});
               response.end();
-            })
           });
       });
     } else if(pathname === '/delete_process'){
