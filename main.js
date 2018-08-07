@@ -35,13 +35,17 @@ var app = http.createServer(function(request,response){
       } else {
         db.query("select * from topic",function(error, results, fields){
           if (error) throw error;
-          db.query(`select * from topic where id = ?`,[queryData.id],function(error2, topic, fields){
+          db.query(`select topic.title, topic.description, author.name
+              from topic LEFT JOIN author
+              ON topic.author_id=author.id
+              where topic.id = ?`, [queryData.id], function(error2, topic, fields){
             if (error2) throw error2;
             var title = topic[0].title;
             var description = topic[0].description;
+            var name = topic[0].name;
             var list = template.list(results);
             var html = template.HTML(title, list,
-              `<h2>${title}</h2>${description}`,
+              `<h2>${title}</h2><p>${description}</p>${name}`,
               `<a href="/create">create</a>
                 <a href="/update?id=${queryData.id}">update</a>
                 <form action="delete_process" method="post">
