@@ -61,7 +61,6 @@ var app = http.createServer(function(request, response) {
   } else if (pathname === '/create') {
     db.query("select * from topic", function(error, results, fields) {
       db.query("select * from author", function(error2, authors) {
-
         var title = 'WEB - create';
         var selectTag = template.authorSelect(authors);
         var list = template.list(results);
@@ -102,29 +101,35 @@ var app = http.createServer(function(request, response) {
   } else if (pathname === '/update') {
     db.query("select * from topic", function(error, results) {
       if (error) throw error;
-      db.query("select * from topic where id = ?", [queryData.id], function(error2, topic) {
-        if (error2) throw error2;
-        var id = queryData.id;
-        var title = topic[0].title;
-        var description = topic[0].description;
-        var list = template.list(results);
-        var html = template.HTML(title, list,
-          `
-            <form action="/update_process" method="post">
-              <input type="hidden" name="id" value="${id}">
-              <p><input type="text" name="title" placeholder="title" value="${title}"></p>
-              <p>
-                <textarea name="description" placeholder="description">${description}</textarea>
-              </p>
-              <p>
-                <input type="submit">
-              </p>
-            </form>
-            `,
-          `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`
-        );
-        response.writeHead(200);
-        response.end(html);
+      db.query(`select * from topic where id = ?`, [queryData.id], function(error2, topic) {
+        db.query("select * from author", function(error2, authors) {
+          if (error2) throw error2;
+          var id = queryData.id;
+          var title = topic[0].title;
+          var description = topic[0].description;
+          var selectTag = template.authorSelect(authors, topic[0].author_id);
+          var list = template.list(results);
+          var html = template.HTML(title, list,
+            `
+              <form action="/update_process" method="post">
+                <input type="hidden" name="id" value="${id}">
+                <p><input type="text" name="title" placeholder="title" value="${title}"></p>
+                <p>
+                  <textarea name="description" placeholder="description">${description}</textarea>
+                </p>
+                <p>
+                  ${selectTag}
+                </p>
+                <p>
+                  <input type="submit">
+                </p>
+              </form>
+              `,
+            `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`
+          );
+          response.writeHead(200);
+          response.end(html);
+        });
       });
     });
   } else if (pathname === '/update_process') {
@@ -135,10 +140,8 @@ var app = http.createServer(function(request, response) {
     request.on('end', function() {
       var post = qs.parse(body);
       var id = post.id;
-      var title = post.title;
-      var description = post.description;
-      db.query("UPDATE topic \
-          SET title=?, description=?, author_id=1 WHERE id=?", [title, description, id], function(error, result) {
+      db.query("UPDATE topic SET title=?, description=?, author_id=? WHERE id=?",
+      [post.title, post.description, post.author, id], function(error, result) {
         if (error) throw error;
         response.writeHead(302, {
           Location: `/?id=${id}`
