@@ -41,6 +41,8 @@ var app = http.createServer(function(request, response) {
     login.login(request, response);
   } else if (pathname === '/login_process') {
     login.login_process(request, response);
+  } else if (pathname === '/logout_process') {
+    login.logout_process(request, response);
   } else {
     response.writeHead(404);
     response.end('Not found');
