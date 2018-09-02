@@ -11,11 +11,12 @@ var app = http.createServer(function(request, response) {
   var _url = request.url;
   var queryData = url.parse(_url, true).query;
   var pathname = url.parse(_url, true).pathname;
-  var Owner = login.login_Check(request, response);
-  console.log('Owner :', Owner);
+  var isOwner = login.login_Check(request, response);
+  console.log('isOwner :', isOwner);
+
   if (pathname === '/') {
     if (queryData.id === undefined) {
-      topic.home(request, response);
+      topic.home(request, response, login.authStatusUI(isOwner));
     } else {
       topic.page(request, response);
     }
