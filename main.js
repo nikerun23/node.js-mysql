@@ -21,7 +21,7 @@ var app = http.createServer(function(request, response) {
       topic.page(request, response);
     }
   } else if (pathname === '/create') {
-    topic.create(request, response);
+    topic.create(request, response, isOwner);
   } else if (pathname === '/create_process') {
     topic.create_process(request, response);
   } else if (pathname === '/update') {
